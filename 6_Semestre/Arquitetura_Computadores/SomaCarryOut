@@ -1,0 +1,85 @@
+; Autores:
+; Victor Gabriel Martins e Souza
+; Vitor Oliveira Kuribara
+; UNIVERSIDADE CATÓLICA DE SANTOS - 01/09
+; Este programa em Assembly faz a soma de dois valores, com capacidade de resultado de 0 até 510, mostrando em um display.
+; Obs.: O programa abaixo foi baseado em uma arquitetura de 8 bits
+
+JMP Start
+
+x: db 255 ; Primeira parcela da adição
+y: db 124 ; Segunda parcela da adição
+s: db "000" ; Bits que serão usados de referencia para passar o valor para um display
+   db 0
+
+Start:
+	ADD A,[x]
+	ADD A,[y]
+	MOV B,s
+	MOV C, A
+	PUSH A
+	JNC centena
+	PUSH 1
+
+centena:
+	DIV 100
+	JZ dezena:
+	ADD A, 0x30
+	MOV [B],A
+	SUB A, 0x30
+	MUL 100
+	SUB C,A
+dezena:
+	MOV A,C
+	DIV 10
+	JZ unidade:
+	ADD A, 0x30
+	MOV [B+1],A
+	SUB A, 0x30
+	MUL 10
+	SUB C,A
+unidade:
+	ADD C, 0x30
+	MOV [B+2],C
+	
+carryMain:
+	POP D ; Usar D para verificar o estouro
+	CMP D, 1
+	JNE print
+	MOV D, 0
+	
+carryUnidade:
+	MOV C, [B+2]
+	ADD C, 6 
+	CMP C, 57 
+  
+carryDezena:
+	MOV [B+2], C
+	MOV C, [B+1]
+	ADD C, D
+	MOV D, 0
+	ADD C, 5
+	CMP C, 57
+	JBE carryCentena
+	SUB C, 10
+	MOV D, 1
+
+carryCentena:
+	MOV [B+1], C
+	MOV C, [B]
+	ADD C, D
+	MOV D, 0
+	ADD C, 2
+	MOV [B], C
+	
+print:
+	MOV D, 0xE8
+	MOV A, [B]
+
+printloop:
+	MOV [D],A
+	INC D
+	INC B
+	MOV A, [B]
+	CMP A, 0
+	JNZ printloop
